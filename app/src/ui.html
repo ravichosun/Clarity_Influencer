@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Creator Pipeline</title>
+<style>
+  /* Brand tokens: change --accent to ClarityTX's brand colour. */
+  :root{
+    --bg:#f6f7f9; --panel:#ffffff; --panel2:#eef1f5; --line:#dfe3ea;
+    --text:#16202c; --dim:#5d6b7c; --accent:#0f7b74; --on-accent:#ffffff;
+    --accent2:#2f6fd6; --on-accent2:#ffffff; --warn:#a86500; --warn-bg:#fff3dc; --warn-line:#f0d49a;
+    --bad:#c2373d; --bad-line:#f0c9cb; --header:rgba(246,247,249,.94);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a;
+      --text:#e8eaf0; --dim:#9aa3b2; --accent:#3cc6b8; --on-accent:#04201d;
+      --accent2:#5b9dff; --on-accent2:#04122b; --warn:#f5a524; --warn-bg:#2a2213; --warn-line:#574316;
+      --bad:#f2555a; --bad-line:#4a2226; --header:rgba(15,17,21,.94);
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+  header{position:sticky;top:0;z-index:10;background:var(--header);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:12px 16px}
+  .hrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+  h1{margin:0;font-size:17px;font-weight:600;flex:1;min-width:200px}
+  h1 span{color:var(--dim);font-weight:400;font-size:13px;margin-left:6px}
+  .hrow a{color:var(--dim);font-size:13px;text-decoration:none}
+  .hrow a:hover{color:var(--text)}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap}
+  .tab{background:var(--panel);border:1px solid var(--line);color:var(--dim);padding:5px 11px;border-radius:99px;cursor:pointer;font-size:13px;user-select:none}
+  .tab:hover{color:var(--text)}
+  .tab.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+  .tab b{margin-left:6px;opacity:.75}
+  .tab.due b{color:var(--warn);opacity:1}
+  .tab.on.due b{color:inherit}
+  .tools{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center}
+  .tools span{color:var(--dim);font-size:12px}
+  .tools .tab{padding:3px 10px;font-size:12px}
+  .tools input{width:auto;flex:1;min-width:140px;max-width:260px;padding:5px 10px;font-size:13px}
+  .tools select{padding:4px 8px;font-size:12px}
+  main{padding:16px 16px 80px;max-width:900px;margin:0 auto}
+  .notice{background:var(--warn-bg);border:1px solid var(--warn-line);color:var(--warn);padding:10px 14px;border-radius:10px;margin-bottom:14px;font-size:13px}
+  .notice code{font-size:12px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+  .card.sel{border-color:var(--accent2);box-shadow:0 0 0 1px var(--accent2)}
+  .top{display:flex;gap:14px;align-items:flex-start}
+  .av{width:52px;height:52px;border-radius:50%;background:var(--panel2);flex:0 0 52px;object-fit:cover;display:flex;align-items:center;justify-content:center;color:var(--dim);font-weight:600}
+  .who{flex:1;min-width:0}
+  .nm{font-weight:600;font-size:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .hd{color:var(--dim);font-size:13px;overflow-wrap:anywhere}
+  .hd a{color:var(--accent2);text-decoration:none}
+  .badge{font-size:11px;padding:2px 8px;border-radius:99px;border:1px solid var(--line);background:var(--panel2);color:var(--dim);font-weight:500}
+  .badge.tier{color:var(--on-accent);background:var(--accent);border-color:var(--accent);font-weight:700}
+  .badge.tierB{background:var(--accent2);border-color:var(--accent2);color:var(--on-accent2)}
+  .badge.tierC{background:var(--dim);border-color:var(--dim);color:var(--panel)}
+  .badge.warn{background:var(--warn-bg);border-color:var(--warn-line);color:var(--warn)}
+  .score{text-align:right;flex:0 0 auto}
+  .score b{font-size:26px;line-height:1}
+  .score small{display:block;color:var(--dim);font-size:11px}
+  .met{display:flex;gap:18px;flex-wrap:wrap;margin:12px 0 8px;font-size:13px}
+  .met div{color:var(--dim)}
+  .met b{color:var(--text);font-weight:600;overflow-wrap:anywhere}
+  .bio{color:var(--dim);font-size:13px;white-space:pre-wrap;margin:6px 0 10px;border-left:2px solid var(--line);padding-left:10px;overflow-wrap:anywhere}
+  .bars{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:6px;margin:8px 0}
+  .bar i{display:block;height:5px;background:var(--panel2);border-radius:3px;overflow:hidden}
+  .bar i b{display:block;height:100%;background:var(--accent2)}
+  .bar span{font-size:10px;color:var(--dim);display:block;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .draft{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+  .row{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+  select,input,textarea{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:8px 10px;font:inherit}
+  input,textarea{width:100%}
+  textarea{min-height:200px;font-size:13px;line-height:1.55;resize:vertical}
+  .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  button{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:8px 14px;border-radius:8px;cursor:pointer;font:inherit;font-size:13px}
+  button:hover{border-color:var(--dim)}
+  button:disabled{opacity:.5;cursor:default}
+  button.go{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+  button.no{color:var(--bad);border-color:var(--bad-line)}
+  button.alt{background:var(--accent2);border-color:var(--accent2);color:var(--on-accent2);font-weight:600}
+  .empty{color:var(--dim);text-align:center;padding:60px 0}
+  .flash{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);box-shadow:0 4px 18px rgba(0,0,0,.15);padding:10px 18px;border-radius:99px;font-size:13px;opacity:0;transition:.2s;pointer-events:none;max-width:calc(100vw - 32px);text-align:center}
+  .flash.on{opacity:1}
+  .contact{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0 0;font-size:13px;color:var(--dim)}
+  .contact b{color:var(--text);font-weight:600}
+  .pill{font-size:12px;padding:3px 10px;border-radius:99px;border:1px solid var(--line);background:var(--panel2)}
+  .pill.due{background:var(--warn-bg);border-color:var(--warn-line);color:var(--warn);font-weight:600}
+  .pill.ok{border-color:var(--accent);color:var(--accent)}
+  .pill.quiet{color:var(--dim)}
+  .fu{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+  .fu h4{margin:0 0 8px;font-size:13px;font-weight:600}
+  .fu .ch button.on{background:var(--accent2);border-color:var(--accent2);color:var(--on-accent2);font-weight:600}
+  .keys{color:var(--dim);font-size:12px;margin-top:8px}
+  .drop{color:var(--warn);font-size:12px;margin-top:6px}
+  /* sign-ups tab */
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+  .panel h3{margin:0 0 6px;font-size:15px}
+  .panel p{margin:0 0 10px;color:var(--dim);font-size:13px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere}
+  th{color:var(--dim);font-weight:500;font-size:12px}
+  .tablewrap{overflow-x:auto}
+  td a{color:var(--accent2);text-decoration:none}
+  .linkbox{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .linkbox input{width:160px;padding:5px 8px;font-size:12px}
+  .linkbox button{padding:5px 10px;font-size:12px}
+  .sugg{font-size:12px;color:var(--accent2);cursor:pointer;margin-right:8px}
+  @media (max-width:600px){ .top{flex-wrap:wrap} .score{text-align:left} }
+</style>
+</head>
+<body>
+<header>
+  <div class="hrow">
+    <h1><span id="brand">Creator pipeline</span><span id="sub"></span></h1>
+    <a href="/api/export.csv">Export CSV</a>
+    <a href="/logout">Log out</a>
+  </div>
+  <div class="tabs" id="tabs"></div>
+  <div class="tools" id="tools"></div>
+</header>
+<main>
+  <div id="notice"></div>
+  <div id="list"></div>
+  <div class="keys" id="keys">Keys: <b>j</b>/<b>k</b> move, <b>a</b> approve, <b>s</b> skip, <b>c</b> copy message</div>
+</main>
+<div class="flash" id="flash"></div>
+<script>
+const TABS = [['review','Review'],['approved','Ready to send'],['sent','Sent'],['replied','Replied'],['signed','Signed'],['signups','Sign-ups'],['flagged','Flagged'],['skipped','Skipped'],['dropped','Dropped'],['all','All']];
+const TIERS = [['','All tiers'],['C','C · 3k–25k'],['B','B · 25k–250k'],['A','A · 250k+']];
+const MAILERS = [['gmail','Gmail'],['outlook','Outlook'],['mailto','Mail app']];
+const store = {
+  get(k, d){ try { return localStorage.getItem('cp-'+k) ?? d; } catch { return d; } },
+  set(k, v){ try { localStorage.setItem('cp-'+k, v); } catch {} },
+};
+let tab = 'review', data = [], stats = {}, sel = 0, q = '';
+let tier = store.get('tier', '');
+let mailer = store.get('mailer', 'gmail');
+// Follow-up drafts as edited on screen, so a re-render does not lose typing.
+const fuState = {};
+
+const fmt = n => n == null ? '?' : n >= 1e6 ? (n/1e6).toFixed(1).replace(/\.0$/,'')+'M' : n >= 1e3 ? Math.round(n/1e3)+'k' : String(n);
+const pct = n => n == null ? '?' : (n*100).toFixed(2)+'%';
+const day = iso => iso ? new Date(iso).toLocaleDateString(undefined,{month:'short',day:'numeric'}) : '';
+const when = iso => iso ? new Date(iso).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '';
+const daysAgo = n => n === 0 ? 'today' : n === 1 ? 'yesterday' : n + ' days ago';
+const via = ch => ch === 'tiktok_dm' ? 'DM' : 'email';
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const safeUrl = u => /^https?:\/\//i.test(u||'') ? u : (u ? 'https://' + u : '');
+
+function flash(msg){ const f=document.getElementById('flash'); f.textContent=msg; f.classList.add('on'); clearTimeout(flash.t); flash.t=setTimeout(()=>f.classList.remove('on'),2600); }
+async function api(path, body){
+  const r = await fetch(path, body ? {method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)} : undefined);
+  if (r.status === 401) { location.reload(); return {}; }
+  return r.json();
+}
+
+/** A compose window in the chosen mail app, filled from what is on screen. */
+function compose(to, subject, body){
+  const e = encodeURIComponent;
+  if (mailer === 'outlook') {
+    window.open(`https://outlook.office.com/mail/deeplink/compose?to=${e(to)}&subject=${e(subject)}&body=${e(body)}`, '_blank', 'noopener');
+  } else if (mailer === 'mailto') {
+    location.href = `mailto:${e(to)}?subject=${e(subject)}&body=${e(body)}`;
+  } else {
+    window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${e(to)}&su=${e(subject)}&body=${e(body)}`, '_blank', 'noopener');
+  }
+}
+const mailerName = () => (MAILERS.find(m => m[0] === mailer) || MAILERS[0])[1];
+
+function contactLine(c){
+  const h = c.contact; if(!h) return '';
+  const bits = [`${via(h.first_channel)==='DM'?'DMed':'Emailed'} <b>${day(h.first_sent_at)}</b>`];
+  if (h.followups) bits.push(`followed up by ${via(h.last_channel)} <b>${day(h.last_sent_at)}</b> (${daysAgo(h.days_since)})`);
+  else bits[0] += ` (${daysAgo(h.days_since)})`;
+  const clicked = c.status === 'signed' ? ''
+    : h.clicked_at ? `<span class="pill ok">Clicked the link${h.click_count>1?` ${h.click_count}×`:''}, no sign-up seen yet</span>`
+    : `<span class="pill">Hasn't clicked the link</span>`;
+  const stage = c.status !== 'contacted' ? ''
+    : h.stage === 'followup_due' ? `<span class="pill due">Follow-up due</span>`
+    : h.stage === 'waiting' ? `<span class="pill">Follow-up in ${h.due_in} day${h.due_in===1?'':'s'}</span>`
+    : h.stage === 'followed_up' ? `<span class="pill">Followed up, waiting</span>`
+    : `<span class="pill quiet">No reply after the follow-up</span>`;
+  const signed = c.status === 'signed' ? `<span class="pill ok">Signed up${c.signed_at?' '+day(c.signed_at):''}</span>` : '';
+  return `<div class="contact">${bits.join(' · ')} ${signed}${clicked}${stage}</div>`;
+}
+
+function followupPanel(c){
+  const h = c.contact; if(!h || c.status !== 'contacted' || h.followups) return '';
+  const st = fuState[c.handle];
+  if (h.stage !== 'followup_due' && !st) return `<div class="btns"><button class="act-fu-open">Follow up now</button></div>`;
+  const ch = st?.channel || (c.email ? 'email' : 'tiktok_dm');
+  return `<div class="fu">
+    <h4>Follow-up. One only; after this, leave it.</h4>
+    <div class="row ch">
+      ${c.email?`<button class="act-fu-ch ${ch==='email'?'on':''}" data-ch="email">By email</button>`:''}
+      <button class="act-fu-ch ${ch==='tiktok_dm'?'on':''}" data-ch="tiktok_dm">${via(h.first_channel)==='email'?'As a TikTok DM instead':'By TikTok DM'}</button>
+    </div>
+    ${ch==='email'?`<div class="row"><input class="fu-subj" value="${esc(st?.subject||'')}" placeholder="subject"></div>`:''}
+    <textarea class="fu-msg" placeholder="Loading the follow-up…">${esc(st?.text||'')}</textarea>
+    <div class="btns">
+      <button class="go act-fu-sent">✓ Mark follow-up sent</button>
+      ${ch==='email'?`<button class="act-fu-mail">Open in ${mailerName()}</button>`
+        :`<button class="act-fu-dm">Copy and open their TikTok</button>`}
+    </div>
+  </div>`;
+}
+
+async function load(){
+  stats = await api('/api/stats');
+  document.getElementById('brand').textContent = `${stats.company || ''} creator pipeline`;
+  document.title = `${stats.company || ''} Creator Pipeline`.trim();
+  const r = stats.last_run;
+  document.getElementById('sub').textContent = r
+    ? `last scrape ${when(r.started_at)} · ${r.new_candidates||0} new, ${r.enriched||0} enriched${r.ok?'':' (with errors)'}`
+    : 'no scraper run yet';
+
+  document.getElementById('tabs').innerHTML = TABS.map(([k,label]) => {
+    if (k==='sent' && stats.followup_due) return `<div class="tab due ${k===tab?'on':''}" data-tab="${k}">${label}<b>${stats.sent} · ${stats.followup_due} due</b></div>`;
+    if (k==='signups') return `<div class="tab ${stats.signups_unmatched?'due':''} ${k===tab?'on':''}" data-tab="${k}">${label}<b>${stats.signups_total||0}${stats.signups_unmatched?` · ${stats.signups_unmatched} unmatched`:''}</b></div>`;
+    return `<div class="tab ${k===tab?'on':''}" data-tab="${k}">${label}<b>${(k==='all'?stats.total:stats[k])??0}</b></div>`;
+  }).join('');
+  document.querySelectorAll('#tabs .tab').forEach(el => el.onclick = () => { tab = el.dataset.tab; sel = 0; load(); });
+
+  const tools = document.getElementById('tools');
+  if (tab === 'signups') { tools.innerHTML = ''; }
+  else {
+    tools.innerHTML = '<span>Show</span>' + TIERS.map(([k,label]) => `<div class="tab ${k===tier?'on':''}" data-tier="${k}">${label}</div>`).join('')
+      + `<input id="q" type="search" placeholder="Search name, handle, email" value="${esc(q)}">`
+      + `<span>Send email with</span><select id="mailer">${MAILERS.map(([k,l])=>`<option value="${k}" ${k===mailer?'selected':''}>${l}</option>`).join('')}</select>`;
+    tools.querySelectorAll('.tab').forEach(el => el.onclick = () => { tier = el.dataset.tier; sel = 0; store.set('tier', tier); load(); });
+    const qi = document.getElementById('q');
+    qi.oninput = () => { clearTimeout(qi.t); qi.t = setTimeout(() => { q = qi.value.trim(); sel = 0; loadList(); }, 300); };
+    document.getElementById('mailer').onchange = e => { mailer = e.target.value; store.set('mailer', mailer); render(); };
+  }
+
+  const n = document.getElementById('notice');
+  n.innerHTML = stats.unfinished_config?.length
+    ? `<div class="notice">Approving is turned off until <code>config/outreach.json</code> is filled in (still TODO: ${stats.unfinished_config.map(esc).join(', ')}). Edit it, then redeploy with <code>npm run app:deploy</code>. Everything else works.</div>`
+    : '';
+  document.getElementById('keys').style.display = tab === 'signups' ? 'none' : '';
+  if (tab === 'signups') return loadSignups();
+  return loadList();
+}
+
+async function loadList(){
+  const r = await api('/api/candidates?limit=300&tab='+tab+(tier?'&tier='+tier:'')+(q?'&q='+encodeURIComponent(q):''));
+  data = r.creators || [];
+  render();
+}
+
+function render(){
+  if (tab === 'signups') return;
+  const el = document.getElementById('list');
+  if(!data.length){
+    el.innerHTML = q ? `<div class="empty">Nothing matches "${esc(q)}" in this tab.</div>`
+      : tier ? `<div class="empty">No Tier ${tier} creators in this tab. Choose <b>All tiers</b> to see everyone.</div>`
+      : tab === 'review' ? '<div class="empty">Nothing to review. Run the scraper: <code>npm run pipeline</code></div>'
+      : '<div class="empty">Nothing here yet.</div>';
+    return;
+  }
+  el.innerHTML = data.map((c,i)=>card(c,i)).join('');
+  bind();
+}
+
+function card(c,i){
+  const d = c.draft, parts = c.score_detail?.parts || {};
+  const tierCls = c.tier==='A'?'tier':c.tier==='B'?'tier tierB':'tier tierC';
+  const bars = Object.entries(parts).map(([k,v])=>
+    `<div class="bar"><i><b style="width:${Math.round(v*100)}%"></b></i><span>${esc(k.replace(/_/g,' '))} ${Math.round(v*100)}</span></div>`).join('');
+  const isReview = ['review','flagged','skipped','dropped'].includes(tab) || (tab==='all' && ['shortlisted','flagged','skipped','dropped'].includes(c.status));
+  const isReady = c.status === 'approved';
+  const isSent = c.status === 'contacted', isReplied = c.status === 'replied';
+  const link = safeUrl(c.external_link);
+  const initial = esc((c.handle||'?')[0].toUpperCase());
+  return `<div class="card ${i===sel?'sel':''}" data-i="${i}">
+    <div class="top">
+      ${c.avatar_url?`<img class="av" src="${esc(c.avatar_url)}" referrerpolicy="no-referrer" alt="" data-initial="${initial}">`:`<div class="av">${initial}</div>`}
+      <div class="who">
+        <div class="nm">${esc(c.nickname||c.handle)}
+          ${c.tier?`<span class="badge ${tierCls}">Tier ${esc(c.tier)}</span>`:''}
+          ${c.verified?'<span class="badge">verified</span>':''}
+          ${c.credentialed?'<span class="badge">credentialed</span>':''}
+          ${c.monetizing?'<span class="badge">monetizing</span>':''}
+          ${c.email?'<span class="badge">email</span>':'<span class="badge warn">no email</span>'}
+          ${tab==='all'?`<span class="badge">${esc(c.status)}</span>`:''}
+        </div>
+        <div class="hd"><a href="https://www.tiktok.com/@${esc(c.handle)}" target="_blank" rel="noopener">@${esc(c.handle)}</a>
+          ${c.source_term?` · found via "${esc(c.source_term)}"`:''}
+          ${link?` · <a href="${esc(link)}" target="_blank" rel="noopener noreferrer">${esc(c.external_link.replace(/^https?:\/\//,'').slice(0,40))}</a>`:''}
+        </div>
+      </div>
+      <div class="score"><b>${c.score??'-'}</b><small>score</small></div>
+    </div>
+    <div class="met">
+      <div>followers <b>${fmt(c.followers)}</b></div>
+      <div>engagement <b>${pct(c.engagement_rate)}</b></div>
+      <div>avg likes <b>${fmt(Math.round(c.avg_likes||0))}</b></div>
+      <div>videos <b>${fmt(c.video_count)}</b></div>
+      ${c.email?`<div>email <b>${esc(c.email)}</b></div>`:''}
+    </div>
+    ${bars?`<div class="bars">${bars}</div>`:''}
+    ${c.bio?`<div class="bio">${esc(c.bio)}</div>`:''}
+    ${contactLine(c)}
+    ${c.drop_reason?`<div class="drop">${esc(c.drop_reason)}</div>`:''}
+    ${isReview||isReady?`<div class="draft">
+      <div class="row">
+        ${isReady?`<span class="hd">${esc(d.template)}</span>`:`<select class="tpl">${(stats.templates||[]).map(t=>`<option ${t===d.template?'selected':''}>${esc(t)}</option>`).join('')}</select>`}
+        <span class="hd">${d.channel==='tiktok_dm'?'TikTok DM':'email'}</span>
+        ${d.link_url?`<span class="hd">· tracked link <a href="${esc(d.link_url)}" target="_blank" rel="noopener">${esc(d.link_url)}</a></span>`:''}
+      </div>
+      ${d.channel!=='tiktok_dm'?`<div class="row"><input class="subj" value="${esc(d.subject)}" placeholder="subject"></div>`:''}
+      <textarea class="msg">${esc(d.message_text)}</textarea>
+      <div class="btns">
+        ${isReady?`<button class="go act-sent">✓ Mark as sent</button>`:''}
+        ${isReview?`<button class="go act-approve" ${stats.unfinished_config?.length?'disabled title="Fill in config/outreach.json first"':''}>Approve</button>`:''}
+        ${isReady&&c.email&&d.channel!=='tiktok_dm'?`<button class="alt act-mail">Open in ${mailerName()}</button>`:''}
+        ${isReady&&d.channel==='tiktok_dm'?`<button class="alt act-dm">Copy and open their TikTok</button>`:''}
+        <button class="act-copy">Copy message</button>
+        ${isReview?`<button class="act-regen">Regenerate</button><button class="act-skip">Skip</button><button class="no act-block">Block</button>`:''}
+        ${isReady?`<button class="act-unapprove">Back to review</button>`:''}
+      </div>
+    </div>`:''}
+    ${isSent?followupPanel(c):''}
+    ${isSent||isReplied?`<div class="btns">
+        ${isSent?`<button class="act-outcome" data-o="replied">They replied</button>`:''}
+        <button class="go act-outcome" data-o="signed">They signed up</button>
+        <button class="no act-outcome" data-o="declined">Declined</button>
+      </div>`:''}
+  </div>`;
+}
+
+function bind(){
+  document.querySelectorAll('img.av').forEach(img => img.onerror = () => {
+    const d = document.createElement('div'); d.className = 'av'; d.textContent = img.dataset.initial || '?'; img.replaceWith(d);
+  });
+  document.querySelectorAll('.card').forEach(card => {
+    const i = +card.dataset.i, c = data[i], handle = c.handle;
+    const get = s => card.querySelector(s);
+    card.onclick = e => { if(!e.target.closest('button,a,textarea,select,input')){ sel=i; render(); } };
+    const on = (cls, fn) => { const b = get('.'+cls); if(b) b.onclick = fn; };
+
+    on('act-approve', async () => {
+      const r = await api('/api/approve', { handle, template:get('.tpl')?.value, subject:get('.subj')?.value, message_text:get('.msg').value, channel:c.draft.channel });
+      flash(r.error ? 'Error: '+r.error : 'Approved. It is in Ready to send with its tracked link.');
+      if (!r.error) load();
+    });
+    on('act-sent', async () => {
+      const r = await api('/api/sent',{handle, outreach_id:c.outreach?.id});
+      flash(r.error ? 'Error: '+r.error : 'Marked as sent'); load();
+    });
+    on('act-skip', async () => { await api('/api/status',{handle,status:'skipped'}); flash('Skipped'); load(); });
+    on('act-block', async () => { await api('/api/status',{handle,status:'blocked'}); flash('Blocked. They will not be suggested again.'); load(); });
+    on('act-unapprove', async () => { await api('/api/status',{handle,status:'shortlisted'}); flash('Moved back to Review'); load(); });
+    // TikTok has no link that opens a DM with text filled in, so: copy the
+    // message, open the profile (where the Message button is), paste, send.
+    on('act-dm', async () => {
+      await navigator.clipboard.writeText(get('.msg').value);
+      window.open('https://www.tiktok.com/@' + encodeURIComponent(handle), '_blank', 'noopener');
+      flash('Copied. Click Message on their profile, paste, send, then ✓ Mark as sent');
+    });
+    on('act-copy', async () => { await navigator.clipboard.writeText(get('.msg').value); flash('Copied'); });
+    on('act-mail', () => {
+      compose(c.email || '', get('.subj')?.value || c.draft.subject || '', get('.msg').value);
+      flash(`Opened in ${mailerName()}. Once it is sent, click ✓ Mark as sent`);
+    });
+    on('act-regen', async () => {
+      const r = await api('/api/preview',{handle, template:get('.tpl').value});
+      get('.msg').value = r.message_text; if(get('.subj')) get('.subj').value = r.subject||'';
+      flash('Redrafted from '+r.template);
+    });
+
+    // follow-up panel
+    const fu = () => fuState[handle] || (fuState[handle] = { channel: c.email ? 'email' : 'tiktok_dm' });
+    const loadFu = async (channel) => {
+      const st = fu(); st.channel = channel;
+      const r = await api('/api/followup-draft', { handle, channel });
+      if (r.error) return flash('Error: ' + r.error);
+      st.text = r.message_text; st.subject = r.subject; render();
+    };
+    on('act-fu-open', () => loadFu(fu().channel));
+    card.querySelectorAll('.act-fu-ch').forEach(b => b.onclick = () => loadFu(b.dataset.ch));
+    if (get('.fu') && fuState[handle]?.text == null) loadFu(fu().channel);
+    const fm = get('.fu-msg'); if (fm) fm.oninput = () => { fu().text = fm.value; };
+    const fs = get('.fu-subj'); if (fs) fs.oninput = () => { fu().subject = fs.value; };
+    on('act-fu-dm', async () => {
+      await navigator.clipboard.writeText(get('.fu-msg').value);
+      window.open('https://www.tiktok.com/@' + encodeURIComponent(handle), '_blank', 'noopener');
+      flash('Copied. Paste it into their DMs, then ✓ Mark follow-up sent');
+    });
+    on('act-fu-mail', () => {
+      compose(c.email || '', get('.fu-subj')?.value || '', get('.fu-msg').value);
+      flash(`Opened in ${mailerName()}. Once it is sent, click ✓ Mark follow-up sent`);
+    });
+    on('act-fu-sent', async () => {
+      const st = fu();
+      const r = await api('/api/followup', { handle, channel: st.channel, subject: get('.fu-subj')?.value || '', message_text: get('.fu-msg').value });
+      if (r.error) return flash('Error: ' + r.error);
+      delete fuState[handle]; flash('Follow-up recorded'); load();
+    });
+    card.querySelectorAll('.act-outcome').forEach(b => b.onclick = async () => {
+      await api('/api/outcome',{handle, outcome:b.dataset.o});
+      flash('Recorded: '+b.dataset.o); load();
+    });
+  });
+}
+
+// --- Sign-ups tab ---------------------------------------------------------
+
+async function loadSignups(){
+  const r = await api('/api/signups');
+  const rows = r.signups || [];
+  const unmatched = rows.filter(s => !s.matched_handle), matched = rows.filter(s => s.matched_handle);
+  const el = document.getElementById('list');
+  const row = s => `<tr data-id="${s.id}">
+      <td>${esc(when(s.signed_up_at && !isNaN(Date.parse(s.signed_up_at)) ? s.signed_up_at : s.received_at))}<br><span class="hd">${esc(s.source)}</span></td>
+      <td>${esc(s.name||'')}${s.email?`<br><span class="hd">${esc(s.email)}</span>`:''}</td>
+      <td>${s.tiktok_handle?'@'+esc(s.tiktok_handle):''}${s.ref?`<br><span class="hd">ref ${esc(s.ref)}</span>`:''}</td>
+      <td>${s.matched_handle
+        ? `<a href="https://www.tiktok.com/@${esc(s.matched_handle)}" target="_blank" rel="noopener">@${esc(s.matched_handle)}</a><br><span class="hd">by ${esc(s.match_method)}</span>`
+        : `<div class="linkbox"><input class="lk" placeholder="@handle we wrote to"><button class="act-link">Link</button></div><div class="sg"></div>`}</td>
+    </tr>`;
+  el.innerHTML = `
+    <div class="panel">
+      <h3>Connect sign-ups from the partners page (optional)</h3>
+      <p>The partners page lets anyone sign up, so sign-ups are matched to the creators you wrote to by the <b>TikTok handle</b> or <b>email</b> they enter, or exactly by <b>ref</b> if the form captures it. Matched creators move to <b>Signed</b>. Setup: README, "Connecting sign-ups".</p>
+      <p>Webhook: ${r.webhook_configured ? '<b>on</b>. New sign-ups arrive automatically.' : 'not set up. Upload a CSV export instead, or see the README to turn it on.'}</p>
+      <div class="btns">
+        <input type="file" id="csv" accept=".csv,text/csv" style="display:none"><button id="csvbtn">Upload sign-ups CSV</button>
+        <button id="rematch">Re-check unmatched</button>
+      </div>
+    </div>
+    ${unmatched.length?`<div class="panel"><h3>Unmatched (${unmatched.length})</h3><p>Signed up, but not matched to anyone in the pipeline. Usually these are people who found the page on their own. If you recognise one, link them by hand.</p>
+      <div class="tablewrap"><table><tr><th>When</th><th>Who</th><th>TikTok</th><th>Creator</th></tr>${unmatched.map(row).join('')}</table></div></div>`:''}
+    <div class="panel"><h3>Matched (${matched.length})</h3>
+      ${matched.length?`<div class="tablewrap"><table><tr><th>When</th><th>Who</th><th>TikTok</th><th>Creator</th></tr>${matched.map(row).join('')}</table></div>`:'<p>None yet.</p>'}</div>`;
+
+  document.getElementById('csvbtn').onclick = () => document.getElementById('csv').click();
+  document.getElementById('csv').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    const res = await api('/api/signups/csv', { csv: await f.text() });
+    if (res.error) return flash('Error: ' + res.error);
+    flash(`${res.rows} rows: ${res.matched} matched, ${res.unmatched} unmatched, ${res.duplicate} already had`);
+    load();
+  };
+  document.getElementById('rematch').onclick = async () => {
+    const res = await api('/api/signups/rematch', {});
+    flash(res.matched?.length ? 'Matched: ' + res.matched.map(h => '@' + h).join(', ') : 'No new matches');
+    load();
+  };
+  el.querySelectorAll('tr[data-id]').forEach(tr => {
+    const input = tr.querySelector('.lk'); if (!input) return;
+    const sg = tr.querySelector('.sg');
+    input.oninput = () => {
+      clearTimeout(input.t);
+      input.t = setTimeout(async () => {
+        const res = await api('/api/creators/search?q=' + encodeURIComponent(input.value));
+        sg.innerHTML = (res.creators||[]).map(c => `<span class="sugg" data-h="${esc(c.handle)}">@${esc(c.handle)}</span>`).join('');
+        sg.querySelectorAll('.sugg').forEach(s => s.onclick = () => { input.value = s.dataset.h; sg.innerHTML = ''; });
+      }, 250);
+    };
+    tr.querySelector('.act-link').onclick = async () => {
+      const res = await api('/api/signups/link', { id: +tr.dataset.id, handle: input.value });
+      if (res.error) return flash('Error: ' + res.error);
+      flash('Linked. That creator is now Signed.'); load();
+    };
+  });
+}
+
+document.addEventListener('keydown', e => {
+  if (tab === 'signups' || /input|textarea|select/i.test(e.target.tagName)) return;
+  const card = document.querySelector('.card.sel');
+  if(e.key==='j'){ sel=Math.min(sel+1,data.length-1); render(); document.querySelector('.card.sel')?.scrollIntoView({block:'center',behavior:'smooth'}); }
+  if(e.key==='k'){ sel=Math.max(sel-1,0); render(); document.querySelector('.card.sel')?.scrollIntoView({block:'center',behavior:'smooth'}); }
+  if(e.key==='a') card?.querySelector('.act-approve')?.click();
+  if(e.key==='s') card?.querySelector('.act-skip')?.click();
+  if(e.key==='c') card?.querySelector('.act-copy')?.click();
+});
+
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // The Worker's name becomes its address: https://<name>.<your-subdomain>.workers.dev
+  "name": "clarity-creator-pipeline",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-01",
+  "observability": { "enabled": true },
+  "workers_dev": true,
+
+  // Optional: serve the pipeline (and the tracked links in letters) from your
+  // own domain instead of workers.dev, e.g. go.meetclaritytx.com. The domain
+  // must be a zone in the same Cloudflare account. Uncomment and edit:
+  // "routes": [
+  //   { "pattern": "go.meetclaritytx.com", "custom_domain": true }
+  // ],
+
+  "vars": {
+    // Base URL used for the tracked links put into letters (…/go/<token>).
+    // Leave empty to use whatever address the pipeline page is opened on.
+    // Set it once you add a custom domain so links never show workers.dev.
+    "PUBLIC_BASE_URL": ""
+  },
+
+  // Secrets (never put these in this file). Set each once with
+  //   npx wrangler secret put <NAME>
+  //   GATE_PASSWORD          the password for the pipeline page
+  //   ADMIN_TOKEN            shared with the scraper (.env), long and random
+  //   SIGNUP_WEBHOOK_SECRET  optional, only if you connect sign-ups by webhook
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "clarity_creator_pipeline",
+      // Paste the id printed by: npx wrangler d1 create clarity_creator_pipeline
+      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+    }
+  ],
+
+  // Lets the code import the outreach templates (.md) and the page (.html) as text.
+  "rules": [
+    { "type": "Text", "globs": ["**/*.md", "**/*.html"], "fallthrough": true }
+  ]
+}

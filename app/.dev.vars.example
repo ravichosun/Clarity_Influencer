@@ -1,0 +1,5 @@
+# For local development only (`npm run app:dev`). Copy to app/.dev.vars.
+# In production these are set with `npx wrangler secret put <NAME>`.
+GATE_PASSWORD=local-test-password
+ADMIN_TOKEN=local-test-admin-token
+SIGNUP_WEBHOOK_SECRET=local-test-webhook-secret

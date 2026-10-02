@@ -1,0 +1,26 @@
+{
+  "name": "clarity-creator-pipeline",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Finds TikTok creators for the ClarityTX partner program, drafts outreach letters, and tracks them through to sign-up.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "pipeline": "node scraper/pipeline.mjs",
+    "pipeline:dry": "node scraper/pipeline.mjs --dry",
+    "emails": "node scraper/emails.mjs",
+    "rescore": "node scraper/rescore.mjs",
+    "access-check": "node scraper/access-check.mjs",
+    "tiktok-login": "node scraper/tiktok-login.mjs",
+    "app:install": "npm --prefix app install",
+    "app:dev": "npm --prefix app run dev",
+    "app:deploy": "npm --prefix app run deploy",
+    "app:db:init": "npm --prefix app run db:init",
+    "app:db:init:remote": "npm --prefix app run db:init:remote"
+  },
+  "dependencies": {
+    "puppeteer-core": "^23.10.4"
+  }
+}

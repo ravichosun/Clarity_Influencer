@@ -1,0 +1,20 @@
+{
+  "_comment": "Everything the outreach letters say about Clarity and the sender. Fill in every value marked TODO before approving anything: the pipeline page refuses to approve a letter while a TODO is still in here, so a placeholder can never reach a creator. These values are built into the pipeline page, so redeploy after editing (npm run app:deploy).",
+
+  "company_name": "ClarityTX",
+  "product_url": "https://meetclaritytx.com",
+  "partners_url": "https://meetclaritytx.com/partners",
+
+  "sender_name": "TODO your name",
+  "sender_title": "TODO your title, e.g. Partnerships, ClarityTX",
+  "sender_email": "TODO you@meetclaritytx.com",
+
+  "_offer_comment": "One sentence, finished by the letter: 'Partners {{offer}}.' Example: 'earn 30% of every subscription that comes through their link, every month the clinician stays subscribed'.",
+  "offer": "TODO describe what partners earn",
+
+  "_mailing_address_comment": "CAN-SPAM requires a valid postal address in commercial email. It is added to the bottom of every email (not to TikTok DMs).",
+  "mailing_address": "TODO ClarityTX, street, city, state ZIP",
+
+  "followup_after_days": 5,
+  "quiet_after_days": 7
+}

@@ -1,0 +1,25 @@
+{
+  "_comment": "How creators are ranked. Every component is 0..1 and the weights should add up to 1. Credibility carries more weight than a generic influencer search because ClarityTX sells to clinicians: a creator with ND/MD/RD/health-coach credentials talks to the people who buy it. Tune freely; run `npm run rescore` afterwards to re-rank everyone already in the pipeline.",
+  "weights": {
+    "reach_log_scaled": 0.25,
+    "engagement_rate": 0.20,
+    "topical_fit": 0.20,
+    "monetizability": 0.10,
+    "contactability": 0.10,
+    "credibility": 0.15
+  },
+  "_reach_comment": "Followers are scored on a log scale between 10^log_min (~3k) and 10^log_max (~5M), so 40k engaged followers are not buried by 2M passive ones.",
+  "reach_scale": { "log_min": 3.5, "log_max": 6.7 },
+  "_engagement_comment": "Engagement is (lifetime likes / videos) / followers, because per-video views need a logged-in session. Above distrust_above the number is usually an artifact of one old viral video, so it is scored as a middling 0.5 and flagged for a human look.",
+  "engagement_scale": { "floor": 0.002, "target": 0.15, "distrust_above": 0.35 },
+  "tiers": {
+    "A": { "min_followers": 250000 },
+    "B": { "min_followers": 25000 },
+    "C": { "min_followers": 3000 }
+  },
+  "hard_drops": {
+    "min_followers": 3000,
+    "min_engagement_rate": 0.002,
+    "drop_private": true
+  }
+}

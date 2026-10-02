@@ -1,0 +1,11 @@
+node_modules/
+.env
+.dev.vars
+app/.dev.vars
+.wrangler/
+app/.wrangler/
+.chrome-profile/
+PAUSED
+logs/
+*.log
+.DS_Store

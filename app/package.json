@@ -1,0 +1,17 @@
+{
+  "name": "clarity-creator-pipeline-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ClarityTX creator pipeline page: a Cloudflare Worker + D1 database.",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:init": "wrangler d1 execute clarity_creator_pipeline --local --file=schema.sql",
+    "db:init:remote": "wrangler d1 execute clarity_creator_pipeline --remote --file=schema.sql",
+    "tail": "wrangler tail"
+  },
+  "devDependencies": {
+    "wrangler": "^4.42.0"
+  }
+}
